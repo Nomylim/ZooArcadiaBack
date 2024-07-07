@@ -4,34 +4,44 @@ namespace App\Controller;
 
 use App\Entity\Utilisateur;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 use App\Repository\UtilisateurRepository;
 use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
+use Symfony\Component\Serializer\Normalizer\AbstractNormalizer;
+use Symfony\Component\Serializer\SerializerInterface;
 
 #[Route('/api/utilisateur', name: 'app_api_utilisateur_')]
 class UtilisateurController extends AbstractController
 {
-    public function __construct(private EntityManagerInterface $manager, private UtilisateurRepository $repository)
+    public function __construct(
+        private EntityManagerInterface $manager,
+        private UtilisateurRepository $repository,
+        private SerializerInterface $serializer,
+        private UrlGeneratorInterface $urlGenerator,
+        )
     {
         
     }
-    #[Route('/{id}', name: 'new', methods: 'POST')]
-    public function new(): Response
+    #[Route( name: 'new', methods: 'POST')]
+    public function new(Request $request): JsonResponse
     {
         //Crée un nouvel utilisateur à l'aide d'un formulaire
-        $utilisateur = new Utilisateur();
-        $utilisateur->setMail('mail@mail.com');
-        $utilisateur->setPassword('123');
-        $utilisateur->setRole('admin');
+        $utilisateur = $this->serializer->deserialize($request->getContent(), Utilisateur::class, 'json');
         
         $this->manager->persist($utilisateur);
         $this->manager->flush();
 
-        return $this->json(
-            ['message' =>"Utilisateur créer avec {$utilisateur->getId()} id"],
-            Response::HTTP_CREATED,
+        $responseData = $this->serializer->serialize($utilisateur,'json');
+        $location = $this->urlGenerator->generate(
+            'app_api_utilisateur_show',
+            ['id' => $utilisateur->getId()],
+            UrlGeneratorInterface::ABSOLUTE_URL,
         );
+        return new JsonResponse($responseData, Response::HTTP_CREATED, ["Location"=>$location], true);
     }
 
     #[Route('/{id}', name: 'show', methods: 'GET')]
@@ -39,41 +49,46 @@ class UtilisateurController extends AbstractController
     {
         $utilisateur = $this->repository->findOneBy(['id' => $id]);
 
-        if (!$utilisateur) {
-            throw $this->createNotFoundException("No Users found for {$id} id");
+        if ($utilisateur) {
+            $responseData = $this->serializer->serialize($utilisateur, 'json');
+            return new JsonResponse($responseData, Response::HTTP_OK, [], true);
         }
 
-        return $this->json(
-            ['message' => "A user was found : {$utilisateur->getMail()} for {$utilisateur->getId()} id"]
-        );
+        return new JsonResponse(null,Response::HTTP_NOT_FOUND);
     }
 
     #[Route('/{id}', name: 'edit', methods: 'PUT')]
-    public function edit(int $id): Response
+    public function edit(int $id, Request $request): JsonResponse
     {
         $utilisateur = $this->repository->findOneBy(['id' => $id]);
 
-        if (!$utilisateur) {
-            throw $this->createNotFoundException("No user found for {$id} id");
+        if ($utilisateur) {
+            $utilisateur = $this->serializer->deserialize(
+                $request->getContent(),
+                Utilisateur::class,
+                'json',
+                [AbstractNormalizer::OBJECT_TO_POPULATE =>$utilisateur]
+            );
+            $this->manager->flush();
+
+            return new JsonResponse(null, Response::HTTP_NO_CONTENT);
         }
         //Utiliser l'information d'un formulaire
-        $utilisateur->setMail('User mail updated');
-        $this->manager->flush();
-
-        return $this->redirectToRoute('app_api_utilisateur_show', ['id' => $utilisateur->getId()]);
+        
+        return new JsonResponse(null, Response::HTTP_NOT_FOUND);
     }
 
     #[Route('/{id}', name: 'delete', methods: 'DELETE')]
-    public function delete(int $id): Response
+    public function delete(int $id): JsonResponse
     {
         $utilisateur = $this->repository->findOneBy(['id' => $id]);
-        if (!$utilisateur) {
-            throw $this->createNotFoundException("No user found for {$id} id");
+        if ($utilisateur) {
+            $this->manager->remove($utilisateur);
+            $this->manager->flush();
+
+            return new JsonResponse(null, Response::HTTP_NO_CONTENT);
         }
 
-        $this->manager->remove($utilisateur);
-        $this->manager->flush();
-
-        return $this->json(['message' => "User resource deleted"], Response::HTTP_NO_CONTENT);
+        return new JsonResponse(null, Response::HTTP_NOT_FOUND);
     }
 }

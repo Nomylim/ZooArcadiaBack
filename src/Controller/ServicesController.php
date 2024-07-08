@@ -4,33 +4,45 @@ namespace App\Controller;
 
 use App\Entity\Services;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 use App\Repository\ServicesRepository;
 use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
+use Symfony\Component\Serializer\Normalizer\AbstractNormalizer;
+use Symfony\Component\Serializer\SerializerInterface;
 
 #[Route('/api/services', name: 'app_api_services_')]
 class ServicesController extends AbstractController
 {
-    public function __construct(private EntityManagerInterface $manager, private ServicesRepository $repository)
+    public function __construct(
+        private EntityManagerInterface $manager, 
+        private ServicesRepository $repository,
+        private SerializerInterface $serializer,
+        private UrlGeneratorInterface $urlGenerator,
+        )
     {
         
     }
-    #[Route('/{id}', name: 'new', methods: 'POST')]
-    public function new(): Response
+    #[Route(name: 'new', methods: 'POST')]
+    public function new(Request $request): Response
     {
         //Crée un nouvel utilisateur à l'aide d'un formulaire
-        $services = new Services();
-        $services ->setNom('Petit train');
-        $services ->setDescription("Faite le tour de notre parc en famille à l'aide de notre petit train. Vous découvrirez tous les habitats et leurs histoires.");
-        
+        $services = $this->serializer->deserialize($request->getContent(), Services::class, 'json');
+
         $this->manager->persist($services);
         $this->manager->flush();
 
-        return $this->json(
-            ['message' =>"Service créer avec {$services->getId()} id"],
-            Response::HTTP_CREATED,
+        $responseData = $this->serializer->serialize($services,'json');
+        $location = $this->urlGenerator->generate(
+            'app_api_services_show',
+            ['id' => $services->getId()],
+            UrlGeneratorInterface::ABSOLUTE_URL,
         );
+
+        return new JsonResponse($responseData, Response::HTTP_CREATED, ["Location"=>$location], true);
     }
 
     #[Route('/{id}', name: 'show', methods: 'GET')]
@@ -38,41 +50,45 @@ class ServicesController extends AbstractController
     {
         $services = $this->repository->findOneBy(['id' => $id]);
 
-        if (!$services) {
-            throw $this->createNotFoundException("No Services found for {$id} id");
+        if ($services) {
+            $responseData = $this->serializer->serialize($services, 'json');
+            return new JsonResponse($responseData, Response::HTTP_OK, [], true);
         }
 
-        return $this->json(
-            ['message' => "A service was found : {$services->getNom()} for {$services->getId()} id"]
-        );
+        return new JsonResponse(null,Response::HTTP_NOT_FOUND);
     }
 
     #[Route('/{id}', name: 'edit', methods: 'PUT')]
-    public function edit(int $id): Response
+    public function edit(int $id, Request $request): Response
     {
         $services = $this->repository->findOneBy(['id' => $id]);
 
-        if (!$services) {
-            throw $this->createNotFoundException("No service found for {$id} id");
-        }
-        //Utiliser l'information d'un formulaire
-        $services->setNom('Service name updated');
-        $this->manager->flush();
+        if ($services) {
+            $services = $this->serializer->deserialize(
+                $request->getContent(),
+                Services::class,
+                'json',
+                [AbstractNormalizer::OBJECT_TO_POPULATE =>$services]
+            );
+            $this->manager->flush();
 
-        return $this->redirectToRoute('app_api_services_show', ['id' => $services->getId()]);
+            return new JsonResponse(null, Response::HTTP_NO_CONTENT);
+        }
+        
+        return new JsonResponse(null, Response::HTTP_NOT_FOUND);
     }
 
     #[Route('/{id}', name: 'delete', methods: 'DELETE')]
     public function delete(int $id): Response
     {
         $services = $this->repository->findOneBy(['id' => $id]);
-        if (!$services) {
-            throw $this->createNotFoundException("No service found for {$id} id");
+        if ($services) {
+            $this->manager->remove($services);
+            $this->manager->flush();
+
+            return new JsonResponse(null, Response::HTTP_NO_CONTENT);
         }
 
-        $this->manager->remove($services);
-        $this->manager->flush();
-
-        return $this->json(['message' => "Service resource deleted"], Response::HTTP_NO_CONTENT);
+        return new JsonResponse(null, Response::HTTP_NOT_FOUND);
     }
 }

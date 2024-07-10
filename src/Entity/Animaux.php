@@ -16,7 +16,7 @@ class Animaux
     private ?int $id = null;
 
     #[ORM\Column(length: 255)]
-    private ?string $Prenom = null;
+    private ?string $prenom = null;
 
     #[ORM\Column(length: 255)]
     private ?string $race = null;
@@ -29,7 +29,7 @@ class Animaux
      * @var Collection<int, RapportVeterinaires>
      */
     #[ORM\OneToMany(targetEntity: RapportVeterinaires::class, mappedBy: 'Animal', orphanRemoval: true)]
-    private Collection $Etat;
+    private Collection $etat;
 
     /**
      * @var Collection<int, Nourriture>
@@ -39,7 +39,7 @@ class Animaux
 
     public function __construct()
     {
-        $this->Etat = new ArrayCollection();
+        $this->etat = new ArrayCollection();
         $this->nourriture = new ArrayCollection();
     }
 
@@ -50,12 +50,12 @@ class Animaux
 
     public function getPrenom(): ?string
     {
-        return $this->Prenom;
+        return $this->prenom;
     }
 
-    public function setPrenom(string $Prenom): static
+    public function setPrenom(string $prenom): static
     {
-        $this->Prenom = $Prenom;
+        $this->prenom = $prenom;
 
         return $this;
     }
@@ -89,13 +89,13 @@ class Animaux
      */
     public function getEtat(): Collection
     {
-        return $this->Etat;
+        return $this->etat;
     }
 
     public function addEtat(RapportVeterinaires $etat): static
     {
-        if (!$this->Etat->contains($etat)) {
-            $this->Etat->add($etat);
+        if (!$this->etat->contains($etat)) {
+            $this->etat->add($etat);
             $etat->setAnimal($this);
         }
 
@@ -104,7 +104,7 @@ class Animaux
 
     public function removeEtat(RapportVeterinaires $etat): static
     {
-        if ($this->Etat->removeElement($etat)) {
+        if ($this->etat->removeElement($etat)) {
             // set the owning side to null (unless already changed)
             if ($etat->getAnimal() === $this) {
                 $etat->setAnimal(null);

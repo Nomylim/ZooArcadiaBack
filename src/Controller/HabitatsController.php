@@ -4,7 +4,7 @@ namespace App\Controller;
 
 use App\Entity\Habitats;
 use OpenApi\Attributes as OA;
-use App\Repository\ServicesRepository;
+use App\Repository\HabitatsRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\{JsonResponse, Request, Response};
@@ -18,7 +18,7 @@ class HabitatsController extends AbstractController
 {
     public function __construct(
         private EntityManagerInterface $manager,
-        private ServicesRepository $repository,
+        private HabitatsRepository $repository,
         private SerializerInterface $serializer,
         private UrlGeneratorInterface $urlGenerator,
     )
@@ -79,7 +79,7 @@ class HabitatsController extends AbstractController
             new OA\Parameter(
                 name: "id",
                 in: "path",
-                required: "true",
+                required: true,
                 description: "ID de l'habitat à afficher",
                 schema: new OA\Schema(type: "integer")
             )
@@ -87,7 +87,7 @@ class HabitatsController extends AbstractController
         responses: [
             new OA\Response(
                 response: 200,
-                description: "habitat trouvé avec succès",
+                description: "Habitat trouvé avec succès",
                 content: new OA\JsonContent(
                     type: "object",
                     properties: [
@@ -115,7 +115,7 @@ class HabitatsController extends AbstractController
         return new JsonResponse(null,Response::HTTP_NOT_FOUND);
     }
 
-    #[Route('{/id}', name:'edit', methods:'PUT')]
+    #[Route('/{id}', name:'edit', methods:['PUT'])]
     #[OA\Put(
         path: "/api/habitats/{id}",
         summary: "Editer un habitat",
@@ -123,7 +123,7 @@ class HabitatsController extends AbstractController
             new OA\Parameter(
                 name: "id",
                 in: "path",
-                required: "true",
+                required: true,
                 description: "ID de l'habitat à modifier",
                 schema: new OA\Schema(type: "integer")
             )
@@ -177,7 +177,7 @@ class HabitatsController extends AbstractController
         return new JsonResponse(null, Response::HTTP_NOT_FOUND);
     }
 
-    #[Route('{/id}', name:'delete', methods:'DELETE')]
+    #[Route('/{id}', name:'delete', methods:['DELETE'])]
     #[OA\Delete(
         path: "/api/habitats/{id}",
         summary: "Supprimer un habitats par son ID",
@@ -185,7 +185,7 @@ class HabitatsController extends AbstractController
             new OA\Parameter(
                 name: "id",
                 in: "path",
-                required: "true",
+                required: true,
                 description: "ID de l'habitat à supprimer",
                 schema: new OA\Schema(type: "integer")
             )
@@ -203,9 +203,9 @@ class HabitatsController extends AbstractController
     )]
     public function delete(int $id): Response
     {
-        $animaux = $this->repository->findOneBy(['id' => $id]);
-        if ($animaux) {
-            $this->manager->remove($animaux);
+        $habitat = $this->repository->findOneBy(['id' => $id]);
+        if ($habitat) {
+            $this->manager->remove($habitat);
             $this->manager->flush();
 
             return new JsonResponse(null, Response::HTTP_NO_CONTENT);

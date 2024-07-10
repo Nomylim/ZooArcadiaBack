@@ -80,7 +80,7 @@ class ServicesController extends AbstractController
             new OA\Parameter(
                 name: "id",
                 in: "path",
-                required: "true",
+                required: true,
                 description: "ID du service à afficher",
                 schema: new OA\Schema(type: "integer")
             )
@@ -124,7 +124,7 @@ class ServicesController extends AbstractController
             new OA\Parameter(
                 name: "id",
                 in: "path",
-                required: "true",
+                required: true,
                 description: "ID du service à modifier",
                 schema: new OA\Schema(type: "integer")
             )
@@ -186,7 +186,7 @@ class ServicesController extends AbstractController
             new OA\Parameter(
                 name: "id",
                 in: "path",
-                required: "true",
+                required: true,
                 description: "ID du service à supprimer",
                 schema: new OA\Schema(type: "integer")
             )

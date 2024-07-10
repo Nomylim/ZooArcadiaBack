@@ -24,14 +24,14 @@ class RapportVeterinaires
     private ?int $grammage = null;
 
     #[ORM\Column(type: Types::TEXT)]
-    private ?string $EtatAnimal = null;
+    private ?string $etatanimal = null;
 
     #[ORM\Column(type: Types::TEXT, nullable: true)]
     private ?string $description = null;
 
     #[ORM\ManyToOne(inversedBy: 'Etat')]
     #[ORM\JoinColumn(nullable: false)]
-    private ?Animaux $Animal = null;
+    private ?Animaux $animal = null;
 
     public function getId(): ?int
     {
@@ -76,12 +76,12 @@ class RapportVeterinaires
 
     public function getEtatAnimal(): ?string
     {
-        return $this->EtatAnimal;
+        return $this->etatanimal;
     }
 
-    public function setEtatAnimal(string $EtatAnimal): static
+    public function setEtatAnimal(string $etatanimal): static
     {
-        $this->EtatAnimal = $EtatAnimal;
+        $this->etatanimal = $etatanimal;
 
         return $this;
     }
@@ -100,12 +100,12 @@ class RapportVeterinaires
 
     public function getAnimal(): ?Animaux
     {
-        return $this->Animal;
+        return $this->animal;
     }
 
-    public function setAnimal(?Animaux $Animal): static
+    public function setAnimal(?Animaux $animal): static
     {
-        $this->Animal = $Animal;
+        $this->animal = $animal;
 
         return $this;
     }

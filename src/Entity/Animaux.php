@@ -5,7 +5,6 @@ namespace App\Entity;
 use App\Repository\AnimauxRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
-use Symfony\Component\Serializer\Annotation\MaxDepth;
 use Symfony\Component\Serializer\Annotation\Groups;
 use Doctrine\ORM\Mapping as ORM;
 
@@ -15,16 +14,23 @@ class Animaux
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
+    #[Groups(['animal_read'])]
     private ?int $id = null;
 
     #[ORM\Column(length: 255)]
+    #[Groups(['animal_read'])]
+
     private ?string $prenom = null;
 
     #[ORM\Column(length: 255)]
+    #[Groups(['animal_read'])]
+
     private ?string $race = null;
 
     #[ORM\ManyToOne(targetEntity:"Habitats", inversedBy: 'animaux')]
     #[ORM\JoinColumn(nullable: false)]
+    #[Groups(['animal_read'])]
+
     private ?Habitats $habitat = null;
 
     /**

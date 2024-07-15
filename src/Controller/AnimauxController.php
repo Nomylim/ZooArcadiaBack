@@ -252,4 +252,40 @@ class AnimauxController extends AbstractController
 
         return new JsonResponse(null, Response::HTTP_NOT_FOUND);
     }
+
+    #[Route('_all', name: 'list_all', methods: 'GET')]
+    #[OA\Get(
+        path: "/api/animaux_all",
+        summary: "Liste tous les animaux",
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: "La liste de tous les animaux",
+                content: new OA\JsonContent(
+                    type: "array",
+                    items: new OA\Items(
+                        type: "object",
+                        properties: [
+                            new OA\Property(property: "id", type: "integer", example: "1"),
+                            new OA\Property(property: "prenom", type: "string", example: "Prenom de l'animal"),
+                            new OA\Property(property: "race", type: "string", example: "Race de l'animal"),
+                            new OA\Property(property: "habitat_id", type: "integer", example: "34")
+                        ]
+                    )
+                )
+            )
+        ]
+    )]
+    public function listAll(AnimauxRepository $repository, SerializerInterface $serializer): Response
+    {
+        try{
+            $animaux = $repository->findAll();
+        $serializedAnimaux = $serializer->serialize($animaux, 'json',  ['groups' => 'animal_read']);
+        return new JsonResponse($serializedAnimaux, Response::HTTP_OK, [], true);
+        }
+        catch(\Exception $e){
+            $this->logger->error('Erreur lors de la récupération des animaux: ' . $e->getMessage(), ['exception' => $e]);
+            return new JsonResponse(['message' => 'Erreur interne du serveur'], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
 }

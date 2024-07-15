@@ -251,7 +251,7 @@ class ServicesController extends AbstractController
         return new JsonResponse(null, Response::HTTP_NOT_FOUND);
     }
 
-    #[Route('_all', name: 'lsit_all', methods: 'GET')]
+    #[Route('_all', name: 'list_all', methods: 'GET')]
     #[OA\Get(
         path: "/api/services_all",
         summary: "Liste tous les services",

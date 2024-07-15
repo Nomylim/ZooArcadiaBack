@@ -20,6 +20,9 @@ class Services
     #[ORM\Column(type: Types::TEXT)]
     private ?string $description = null;
 
+    #[ORM\Column(length: 255, nullable: true)]
+    private ?string $image_path = null;
+
     public function getId(): ?int
     {
         return $this->id;
@@ -45,6 +48,18 @@ class Services
     public function setDescription(string $description): static
     {
         $this->description = $description;
+
+        return $this;
+    }
+
+    public function getImagePath(): ?string
+    {
+        return $this->image_path;
+    }
+
+    public function setImagePath(?string $image_path): self
+    {
+        $this->image_path = $image_path;
 
         return $this;
     }

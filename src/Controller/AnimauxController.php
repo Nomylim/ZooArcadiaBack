@@ -280,8 +280,8 @@ class AnimauxController extends AbstractController
     {
         try{
             $animaux = $repository->findAll();
-        $serializedAnimaux = $serializer->serialize($animaux, 'json',  ['groups' => 'animal_read']);
-        return new JsonResponse($serializedAnimaux, Response::HTTP_OK, [], true);
+            $serializedAnimaux = $serializer->serialize($animaux, 'json',  ['groups' => 'animal_read']);
+            return new JsonResponse($serializedAnimaux, Response::HTTP_OK, [], true);
         }
         catch(\Exception $e){
             $this->logger->error('Erreur lors de la récupération des animaux: ' . $e->getMessage(), ['exception' => $e]);

@@ -6,6 +6,7 @@ use App\Entity\Habitats;
 use OpenApi\Attributes as OA;
 use App\Repository\HabitatsRepository;
 use Doctrine\ORM\EntityManagerInterface;
+use Psr\Log\LoggerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\{JsonResponse, Request, Response};
 use Symfony\Component\Routing\Attribute\Route;
@@ -21,6 +22,7 @@ class HabitatsController extends AbstractController
         private HabitatsRepository $repository,
         private SerializerInterface $serializer,
         private UrlGeneratorInterface $urlGenerator,
+        private LoggerInterface $logger,
     )
     {
     }
@@ -212,5 +214,39 @@ class HabitatsController extends AbstractController
         }
 
         return new JsonResponse(null, Response::HTTP_NOT_FOUND);
+    }
+    #[Route('_all', name: 'list_all', methods: 'GET')]
+    #[OA\Get(
+        path: "/api/habitats_all",
+        summary: "Liste tous les habitats",
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: "La liste de tous les habitats",
+                content: new OA\JsonContent(
+                    type: "array",
+                    items: new OA\Items(
+                        type: "object",
+                        properties: [
+                            new OA\Property(property: "id", type: "integer", example: "1"),
+                            new OA\Property(property: "name", type: "string", example: "Nom de l'habitat"),
+                            new OA\Property(property: "description", type: "string", example: "Description de l'habitat")
+                        ]
+                    )
+                )
+            )
+        ]
+    )]
+    public function listAll(HabitatsRepository $repository, SerializerInterface $serializer): Response
+    {
+        try{
+            $habitats = $repository->findAll();
+            $serializedHabitats = $serializer->serialize($habitats, 'json',  ['groups' => 'habitats_read']);
+            return new JsonResponse($serializedHabitats, Response::HTTP_OK, [], true);
+        }
+        catch(\Exception $e){
+            $this->logger->error('Erreur lors de la récupération des animaux: ' . $e->getMessage(), ['exception' => $e]);
+            return new JsonResponse(['message' => 'Erreur interne du serveur'], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
     }
 }

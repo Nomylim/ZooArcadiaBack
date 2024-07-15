@@ -5,7 +5,6 @@ namespace App\Entity;
 use App\Repository\HabitatsRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
-use Symfony\Component\Serializer\Annotation\MaxDepth;
 use Symfony\Component\Serializer\Annotation\Groups;
 use Doctrine\ORM\Mapping as ORM;
 
@@ -15,18 +14,25 @@ class Habitats
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
+    #[Groups(['habitats_read'])]
     private ?int $id = null;
 
     #[ORM\Column(length: 255)]
+    #[Groups(['habitats_read'])]
+
     private ?string $name = null;
 
     #[ORM\Column(length: 255)]
+    #[Groups(['habitats_read'])]
+
     private ?string $description = null;
 
     /**
      * @var Collection<int, Animaux>
      */
     #[ORM\OneToMany(targetEntity: Animaux::class, mappedBy: 'habitat', orphanRemoval: true)]
+    #[Groups(['habitats_read'])]
+
     private Collection $animaux;
 
     public function __construct()

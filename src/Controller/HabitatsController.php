@@ -245,7 +245,7 @@ class HabitatsController extends AbstractController
             return new JsonResponse($serializedHabitats, Response::HTTP_OK, [], true);
         }
         catch(\Exception $e){
-            $this->logger->error('Erreur lors de la récupération des animaux: ' . $e->getMessage(), ['exception' => $e]);
+            $this->logger->error('Erreur lors de la récupération des habitats: ' . $e->getMessage(), ['exception' => $e]);
             return new JsonResponse(['message' => 'Erreur interne du serveur'], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }

@@ -46,7 +46,7 @@ class RapportVeterinairesController extends AbstractController
                     new OA\Property(property: "date", type: "string", format: "date", example: "2023-07-10"),
                     new OA\Property(property: "etatanimal", type: "string", example: "en bonne santé"),
                     new OA\Property(property: "description", type: "string", example: "descriptif de l'animal plus poussé"),
-                    new OA\Property(property: "animal_id", type: "integer", example: 23),
+                    new OA\Property(property: "animal", type: "integer", example: 23),
                 ]
             )
         ),
@@ -162,7 +162,7 @@ class RapportVeterinairesController extends AbstractController
         $rapportveterinaire = $this->rapportVeterinairesRepository->findOneBy(['id' => $id]);
 
         if ($rapportveterinaire) {
-            $responseData = $this->serializer->serialize($rapportveterinaire, 'json', ['groups' => 'nourriture_read']);
+            $responseData = $this->serializer->serialize($rapportveterinaire, 'json', ['groups' => 'rapportveterinaire_read']);
             return new JsonResponse($responseData, Response::HTTP_OK, [], true);
         }
 
@@ -282,5 +282,43 @@ class RapportVeterinairesController extends AbstractController
         }
 
         return new JsonResponse(null, Response::HTTP_NOT_FOUND);
+    }
+
+    #[Route('_all', name: 'list_all', methods: 'GET')]
+    #[OA\Get(
+        path: "/api/rapportveterinaires_all",
+        summary: "Liste tous les rapport veterinaires",
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: "La liste de tous les rapport veterinaires",
+                content: new OA\JsonContent(
+                    type: "array",
+                    items: new OA\Items(
+                        type: "object",
+                        properties: [
+                            new OA\Property(property: "nourriture", type: "string", example: "Du foin"),
+                            new OA\Property(property: "grammage", type: "integer", example: 500),
+                            new OA\Property(property: "date", type: "string", format: "date", example: "2023-07-10"),
+                            new OA\Property(property: "etatanimal", type: "string", example: "en bonne santé"),
+                            new OA\Property(property: "description", type: "string", example: "descriptif de l'animal plus poussé"),
+                            new OA\Property(property: "animal_id", type: "integer", example: 23),
+                        ]
+                    )
+                )
+            )
+        ]
+    )]
+    public function listAll(RapportVeterinairesRepository $repository, SerializerInterface $serializer): Response
+    {
+        try{
+            $rapportveterinaires = $repository->findAll();
+            $serializedRapport = $serializer->serialize($rapportveterinaires, 'json',['groups' => 'rapportveterinaire_read']);
+            return new JsonResponse($serializedRapport, Response::HTTP_OK, [], true);
+        }
+        catch(\Exception $e){
+            $this->logger->error('Erreur lors de la récupération des rapports vétérinaires: ' . $e->getMessage(), ['exception' => $e]);
+            return new JsonResponse(['message' => 'Erreur interne du serveur'], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
     }
 }

@@ -33,13 +33,16 @@ class ServicesController extends AbstractController
         requestBody: new OA\RequestBody(
             required: true,
             description: "Données du service à créer",
-            content: new OA\JsonContent(
-                type: "object",
-                properties: [
-                    "nom" => new OA\Property(property: "nom", type: "string", example: "Nom du service"),
-                    "description" => new OA\Property(property: "description", type: "string", example: "Description du service"),
-                    "image_path" => new OA\Property(property: "image_path", type: "string", example: "lien de l'image")
-                ]
+            content: new OA\MediaType(
+                mediaType: "multipart/form-data",
+                schema: new OA\Schema(
+                    type: "object",
+                    properties: [
+                        new OA\Property(property: "nom", type: "string", example: "Nom du service"),
+                        new OA\Property(property: "description", type: "string", example: "Description du service"),
+                        new OA\Property(property: "imageBase64", type: "string", format: "base64", description: "Le fichier image du service")
+                    ]
+                )
             )
         ),
         responses: [
@@ -53,56 +56,55 @@ class ServicesController extends AbstractController
                     ]
                 )
             ),
-            new OA\Response(response:400, description:"Données invalides")
+            new OA\Response(response: 400, description: "Données invalides")
         ]
     )]
     public function new(Request $request): JsonResponse
     {
-        $data = json_decode($request->getContent(), true);
+        // Récupérer les champs texte
+        $name = $request->request->get('nom');
+        $description = $request->request->get('description');
 
-    // Vérifiez que les champs requis sont présents
-    if (isset($data['nom'], $data['description'])) {
-        $services = new Services();
-        $services->setNom($data['nom']);
-        $services->setDescription($data['description']);
+        var_dump($name, $description);
+        // Vérifiez que les champs requis sont présents
+        if (empty($name) || empty($description)) {
+        return new JsonResponse(['error' => 'Les champs nom et description sont requis'], Response::HTTP_BAD_REQUEST);
+        }
+        // Vérifiez que les champs requis sont présents
+        if (isset($name, $description)) {
+            $services = new Services();
+            $services->setNom($name);
+            $services->setDescription($description);
 
-        // Gestion de l'upload de l'image
-        /** @var UploadedFile $imageFile */
-        $imageFile = $request->files->get('image_path');
+            /** @var UploadedFile $imageFile */
+            $imageFile = $request->files->get('imageBase64');
 
-        // Gérer le fichier image s'il est présent dans la requête
-        $imageFile = $request->files->get('image_path');
-        if ($imageFile) {
-            $originalFilename = pathinfo($imageFile->getClientOriginalName(), PATHINFO_FILENAME);
-            $newFilename = uniqid() . '.' . $imageFile->guessExtension();
-
-            // Déplacez le fichier dans le répertoire où les images sont stockées
-            try {
-                $imageFile->move(
-                    $this->getParameter('images_directory'),
-                    $newFilename
-                );
-                $services->setImagePath('/uploads/images/' . $newFilename);
-            } catch (FileException $e) {
-                // Gérer les erreurs pendant le déplacement du fichier
-                return new JsonResponse(['error' => 'Failed to upload image'], Response::HTTP_INTERNAL_SERVER_ERROR);
+            if ($imageFile) {
+                try {
+                    $imageContent = file_get_contents($imageFile->getPathname());
+                    $base64Image = base64_encode($imageContent);
+                    $services->setImageBase64($base64Image);
+                } catch (FileException $e) {
+                    return new JsonResponse(['error' => 'Failed to upload image'], Response::HTTP_INTERNAL_SERVER_ERROR);
+                }
+            } else {
+                return new JsonResponse(['error' => 'No image file provided'], Response::HTTP_BAD_REQUEST);
             }
+
+            $this->manager->persist($services);
+            $this->manager->flush();
+
+            $responseData = $this->serializer->serialize($services, 'json', [AbstractNormalizer::GROUPS => ['default']]);
+            $location = $this->urlGenerator->generate(
+                'app_api_services_show',
+                ['id' => $services->getId()],
+                UrlGeneratorInterface::ABSOLUTE_URL,
+            );
+
+            return new JsonResponse($responseData, Response::HTTP_CREATED, ["Location" => $location], true);
         }
-        else {
-            return new JsonResponse(['error' => 'No image file provided'], Response::HTTP_BAD_REQUEST);
-        }
-
-        $this->manager->persist($services);
-        $this->manager->flush();
-
-        $responseData = $this->serializer->serialize($services, 'json',[AbstractNormalizer::GROUPS => ['default']]);
-        $location = $this->urlGenerator->generate(
-            'app_api_services_show',
-            ['id' => $services->getId()],
-            UrlGeneratorInterface::ABSOLUTE_URL,
-        );
-
-        return new JsonResponse($responseData, Response::HTTP_CREATED, ["Location" => $location], true);
+        else{
+            return new JsonResponse(['error' => 'Les champs nom et description sont requis'], Response::HTTP_BAD_REQUEST);
         }
     }
 

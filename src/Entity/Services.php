@@ -21,7 +21,7 @@ class Services
     private ?string $description = null;
 
     #[ORM\Column(length: 255, nullable: true)]
-    private ?string $image_path = null;
+    private ?string $imageBase64 = null;
 
     public function getId(): ?int
     {
@@ -52,14 +52,14 @@ class Services
         return $this;
     }
 
-    public function getImagePath(): ?string
+    public function getImageBase64(): ?string
     {
-        return $this->image_path;
+        return $this->imageBase64;
     }
 
-    public function setImagePath(?string $image_path): self
+    public function setImageBase64(?string $imageBase64): self
     {
-        $this->image_path = $image_path;
+        $this->imageBase64 = $imageBase64;
 
         return $this;
     }

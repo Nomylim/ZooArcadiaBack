@@ -153,6 +153,7 @@ class AvisController extends AbstractController
         $response =[];
         foreach($avis as $a){
             $response[] = [
+                'id'=> $a->getId(),
                 'pseudo' => $a->getPseudo(),
                 'avis' => $a->getAvis()
             ];
@@ -187,16 +188,17 @@ class AvisController extends AbstractController
         $response =[];
         foreach($avis as $a){
             $response[] = [
+                'id'=> $a->getId(),
                 'pseudo' => $a->getPseudo(),
                 'avis' => $a->getAvis()
             ];
         }
-        return new JsonResponse(['status' => 'success', 'avis' => $response], Response::HTTP_OK);
+        return new JsonResponse($response, Response::HTTP_OK);
     }
 
-    #[Route('/{id}', name:'valide', methods:'POST')]
+    #[Route('/valide/{id}', name:'valide', methods:'POST')]
     #[OA\Post(
-        path: "/api/avis/{id}",
+        path: "/api/avis/valide/{id}",
         summary: "Valider un avis",
         parameters:[
             new OA\Parameter(
@@ -272,7 +274,7 @@ class AvisController extends AbstractController
                     properties: [
                         new OA\Property(property: "id", type: "integer", example: 1),
                         new OA\Property(property: "pseudo", type: "string", example:"Mon pseudo"),
-                    new OA\Property(property: "avis", type: "string", example: "Ceci est un avis")
+                        new OA\Property(property: "avis", type: "string", example: "Ceci est un avis")
                     ]
                 )
             ),
@@ -301,9 +303,9 @@ class AvisController extends AbstractController
         return new JsonResponse(null, Response::HTTP_NOT_FOUND);
     }
 
-    #[Route('/{id}', name:'delete', methods:['DELETE'])]
+    #[Route('/delete/{id}', name:'delete', methods:['DELETE'])]
     #[OA\Delete(
-        path: "/api/avis/{id}",
+        path: "/api/avis/delete/{id}",
         summary: "Supprimer un avis par son ID",
         parameters:[
             new OA\Parameter(

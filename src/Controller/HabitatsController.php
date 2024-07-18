@@ -23,8 +23,7 @@ class HabitatsController extends AbstractController
         private SerializerInterface $serializer,
         private UrlGeneratorInterface $urlGenerator,
         private LoggerInterface $logger,
-    )
-    {
+    ) {
     }
     #[Route(name: 'new', methods: 'POST')]
     #[OA\Post(
@@ -63,21 +62,21 @@ class HabitatsController extends AbstractController
         $this->manager->persist($habitat);
         $this->manager->flush();
 
-        $responseData = $this->serializer->serialize($habitat,'json');
+        $responseData = $this->serializer->serialize($habitat, 'json');
         $location = $this->urlGenerator->generate(
             'app_api_habitats_show',
             ['id' => $habitat->getId()],
             UrlGeneratorInterface::ABSOLUTE_URL,
         );
 
-        return new JsonResponse($responseData, Response::HTTP_CREATED, ["Location"=>$location], true);
+        return new JsonResponse($responseData, Response::HTTP_CREATED, ["Location" => $location], true);
     }
 
-    #[Route('/{id}', name:'show', methods:'GET')]
+    #[Route('/{id}', name: 'show', methods: 'GET')]
     #[OA\Get(
         path: "/api/habitats/{id}",
         summary: "Afficher un habitat par son ID",
-        parameters:[
+        parameters: [
             new OA\Parameter(
                 name: "id",
                 in: "path",
@@ -101,7 +100,7 @@ class HabitatsController extends AbstractController
             ),
             new OA\Response(
                 response: 404,
-                description:"Habitat non trouvé"
+                description: "Habitat non trouvé"
             )
         ]
     )]
@@ -114,14 +113,14 @@ class HabitatsController extends AbstractController
             return new JsonResponse($responseData, Response::HTTP_OK, [], true);
         }
 
-        return new JsonResponse(null,Response::HTTP_NOT_FOUND);
+        return new JsonResponse(null, Response::HTTP_NOT_FOUND);
     }
 
-    #[Route('/{id}', name:'edit', methods:['PUT'])]
+    #[Route('/{id}', name: 'edit', methods: ['PUT'])]
     #[OA\Put(
         path: "/api/habitats/{id}",
         summary: "Editer un habitat",
-        parameters:[
+        parameters: [
             new OA\Parameter(
                 name: "id",
                 in: "path",
@@ -156,7 +155,7 @@ class HabitatsController extends AbstractController
             ),
             new OA\Response(
                 response: 404,
-                description:"Habitat non trouvé"
+                description: "Habitat non trouvé"
             )
         ]
     )]
@@ -169,21 +168,21 @@ class HabitatsController extends AbstractController
                 $request->getContent(),
                 Habitats::class,
                 'json',
-                [AbstractNormalizer::OBJECT_TO_POPULATE =>$habitat]
+                [AbstractNormalizer::OBJECT_TO_POPULATE => $habitat]
             );
             $this->manager->flush();
 
             return new JsonResponse(null, Response::HTTP_NO_CONTENT);
         }
-        
+
         return new JsonResponse(null, Response::HTTP_NOT_FOUND);
     }
 
-    #[Route('/{id}', name:'delete', methods:['DELETE'])]
+    #[Route('/{id}', name: 'delete', methods: ['DELETE'])]
     #[OA\Delete(
         path: "/api/habitats/{id}",
         summary: "Supprimer un habitats par son ID",
-        parameters:[
+        parameters: [
             new OA\Parameter(
                 name: "id",
                 in: "path",
@@ -199,7 +198,7 @@ class HabitatsController extends AbstractController
             ),
             new OA\Response(
                 response: 404,
-                description:"Habitat non trouvé"
+                description: "Habitat non trouvé"
             )
         ]
     )]
@@ -239,14 +238,62 @@ class HabitatsController extends AbstractController
     )]
     public function listAll(HabitatsRepository $repository, SerializerInterface $serializer): Response
     {
-        try{
+        try {
             $habitats = $repository->findAll();
-            $serializedHabitats = $serializer->serialize($habitats, 'json',  ['groups' => 'habitats_read']);
+            $serializedHabitats = $serializer->serialize($habitats, 'json', ['groups' => 'habitats_read']);
             return new JsonResponse($serializedHabitats, Response::HTTP_OK, [], true);
-        }
-        catch(\Exception $e){
+        } catch (\Exception $e) {
             $this->logger->error('Erreur lors de la récupération des habitats: ' . $e->getMessage(), ['exception' => $e]);
             return new JsonResponse(['message' => 'Erreur interne du serveur'], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
+    }
+
+    #[Route('/habitats_animaux/{id}', name: 'app_api_habitats_animaux_', methods: ['GET'])]
+    #[OA\Get(
+        path: "/habitats_animaux/{id}",
+        summary: "Liste des animaux dans un habitat",
+        parameters: [
+            new OA\Parameter(
+                name: "id",
+                in: "path",
+                required: true,
+                description: "ID de l'habitat",
+                schema: new OA\Schema(type: "integer")
+            )
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: "Liste des animaux trouvés dans l'habitat",
+                content: new OA\JsonContent(
+                    type: "array",
+                    items: new OA\Items(
+                        type: "object",
+                        properties: [
+                            new OA\Property(property: "id", type: "integer", example: "1"),
+                            new OA\Property(property: "prenom", type: "string", example: "Nom de l'animal"),
+                            new OA\Property(property: "race", type: "string", example: "Race de l'animal")
+                        ]
+                    )
+                )
+            ),
+            new OA\Response(
+                response: 404,
+                description: "Habitat non trouvé"
+            )
+        ]
+    )]
+    public function getAnimaux(int $id, HabitatsRepository $repository, SerializerInterface $serializer): Response
+    {
+        $habitat = $repository->find($id);
+
+        if (!$habitat) {
+            return new JsonResponse(null, Response::HTTP_NOT_FOUND);
+        }
+
+        $animaux = $habitat->getAnimaux();
+        $serializedAnimaux = $serializer->serialize($animaux, 'json', ['groups' => 'animal_read']);
+
+        return new JsonResponse($serializedAnimaux, Response::HTTP_OK, [], true);
     }
 }

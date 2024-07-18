@@ -50,8 +50,8 @@ class AnimauxController extends AbstractController
                 content: new OA\JsonContent(
                     type: "object",
                     properties: [
-                        new OA\Property(property: "id", type: "integer", example: "1"),
-                        new OA\Property(property: "habitat_id", type: "integer", example: "34"),
+                        new OA\Property(property: "id", type: "integer", example: 1),
+                        new OA\Property(property: "habitat_id", type: "integer", example: 34),
                         new OA\Property(property: "prenom", type: "string", example: "Prenom de l'animal"),
                         new OA\Property(property: "race", type: "string", example: "Race de l'animal")
                     ]
@@ -123,8 +123,8 @@ class AnimauxController extends AbstractController
                 content: new OA\JsonContent(
                     type: "object",
                     properties: [
-                        new OA\Property(property: "id", type: "integer", example: "1"),
-                        new OA\Property(property: "habitat_id", type: "integer", example: "34"),
+                        new OA\Property(property: "id", type: "integer", example: 1),
+                        new OA\Property(property: "habitat_id", type: "integer", example: 34),
                         new OA\Property(property: "prenom", type: "string", example: "Prenom de l'animal"),
                         new OA\Property(property: "race", type: "string", example: "Race de l'animal")
                     ]
@@ -169,7 +169,7 @@ class AnimauxController extends AbstractController
                 properties: [
                     new OA\Property(property: "prenom", type: "string", example: "Prenom de l'animal"),
                     new OA\Property(property: "race", type: "string", example: "Race de l'animal"),
-                    new OA\Property(property: "habitat_id", type: "integer", example: "34")
+                    new OA\Property(property: "habitat_id", type: "integer", example: 34)
                 ]
             )
         ),
@@ -180,10 +180,10 @@ class AnimauxController extends AbstractController
                 content: new OA\JsonContent(
                     type: "object",
                     properties: [
-                        new OA\Property(property: "id", type: "integer", example: "1"),
+                        new OA\Property(property: "id", type: "integer", example: 1),
                         new OA\Property(property: "prenom", type: "string", example: "Prenom de l'animal"),
                         new OA\Property(property: "race", type: "string", example: "Race de l'animal"),
-                        new OA\Property(property: "habitat_id", type: "integer", example: "34")
+                        new OA\Property(property: "habitat_id", type: "integer", example: 34)
                     ]
                 )
             ),
@@ -266,10 +266,10 @@ class AnimauxController extends AbstractController
                     items: new OA\Items(
                         type: "object",
                         properties: [
-                            new OA\Property(property: "id", type: "integer", example: "1"),
+                            new OA\Property(property: "id", type: "integer", example: 1),
                             new OA\Property(property: "prenom", type: "string", example: "Prenom de l'animal"),
                             new OA\Property(property: "race", type: "string", example: "Race de l'animal"),
-                            new OA\Property(property: "habitat_id", type: "integer", example: "34")
+                            new OA\Property(property: "habitat_id", type: "integer", example: 34)
                         ]
                     )
                 )

@@ -40,7 +40,7 @@ class ServicesController extends AbstractController
                     properties: [
                         new OA\Property(property: "nom", type: "string", example: "Nom du service"),
                         new OA\Property(property: "description", type: "string", example: "Description du service"),
-                        new OA\Property(property: "imageBase64", type: "string", format: "base64", description: "Le fichier image du service")
+                        new OA\Property(property: "image", type: "string", format: "base64", description: "Le fichier image du service")
                     ]
                 )
             )
@@ -52,7 +52,7 @@ class ServicesController extends AbstractController
                 content: new OA\JsonContent(
                     type: "object",
                     properties: [
-                        "id" => new OA\Property(property: "id", type: "integer", example: "1")
+                        "id" => new OA\Property(property: "id", type: "integer", example: 1)
                     ]
                 )
             ),
@@ -61,50 +61,43 @@ class ServicesController extends AbstractController
     )]
     public function new(Request $request): JsonResponse
     {
-        // Récupérer les champs texte
-        $name = $request->request->get('nom');
-        $description = $request->request->get('description');
-
-        var_dump($name, $description);
-        // Vérifiez que les champs requis sont présents
-        if (empty($name) || empty($description)) {
-        return new JsonResponse(['error' => 'Les champs nom et description sont requis'], Response::HTTP_BAD_REQUEST);
-        }
-        // Vérifiez que les champs requis sont présents
-        if (isset($name, $description)) {
-            $services = new Services();
-            $services->setNom($name);
-            $services->setDescription($description);
-
-            /** @var UploadedFile $imageFile */
-            $imageFile = $request->files->get('imageBase64');
-
-            if ($imageFile) {
-                try {
-                    $imageContent = file_get_contents($imageFile->getPathname());
-                    $base64Image = base64_encode($imageContent);
-                    $services->setImageBase64($base64Image);
-                } catch (FileException $e) {
-                    return new JsonResponse(['error' => 'Failed to upload image'], Response::HTTP_INTERNAL_SERVER_ERROR);
-                }
-            } else {
-                return new JsonResponse(['error' => 'No image file provided'], Response::HTTP_BAD_REQUEST);
+        try {
+            // Vérifier si des données ont été envoyées
+            if (!$request->isMethod('post') || !$request->request->all()) {
+                throw new \InvalidArgumentException('Aucune donnée n\'a été envoyée.');
             }
 
+            // Obtenir les champs du formulaire
+            $nom = $request->request->get('nom');
+            $description = $request->request->get('description');
+
+            // Obtenir le fichier téléchargé
+            $uploadedFile = $request->files->get('image');
+            if (!$uploadedFile) {
+                throw new \InvalidArgumentException('Aucune image n\'a été téléchargée.');
+            }
+
+            // Convertir l'image en Base64
+            $base64Image = base64_encode(file_get_contents($uploadedFile->getPathname()));
+
+            // Créer une nouvelle instance de service
+            $services = new Services();
+            $services->setNom($nom);
+            $services->setDescription($description);
+            $services->setImage($base64Image);
             $this->manager->persist($services);
             $this->manager->flush();
 
-            $responseData = $this->serializer->serialize($services, 'json', [AbstractNormalizer::GROUPS => ['default']]);
-            $location = $this->urlGenerator->generate(
-                'app_api_services_show',
-                ['id' => $services->getId()],
-                UrlGeneratorInterface::ABSOLUTE_URL,
-            );
+            $response = $this->serializer->serialize($services, 'json');
+            $location = $this->urlGenerator->generate('app_api_services_show', ['id' => $services->getId()], UrlGeneratorInterface::ABSOLUTE_URL);
 
-            return new JsonResponse($responseData, Response::HTTP_CREATED, ["Location" => $location], true);
-        }
-        else{
-            return new JsonResponse(['error' => 'Les champs nom et description sont requis'], Response::HTTP_BAD_REQUEST);
+            return new JsonResponse([
+                'message' => 'Service créé avec succès',
+                'data' => $response,
+                'location' => $location
+            ], 201);
+        } catch (\Exception $e) {
+            return new JsonResponse(['error' => 'Une erreur est survenue' . $e->getMessage()], 500);
         }
     }
 
@@ -128,9 +121,10 @@ class ServicesController extends AbstractController
                 content: new OA\JsonContent(
                     type: "object",
                     properties: [
-                        new OA\Property(property: "id", type: "integer", example: "1"),
+                        new OA\Property(property: "id", type: "integer", example: 1),
                         new OA\Property(property: "nom", type: "string", example: "Nom du service"),
-                        new OA\Property(property: "description", type: "string", example: "Description du service")
+                        new OA\Property(property: "description", type: "string", example: "Description du service"),
+                        new OA\Property(property: "image", type: "string", format: "base64", example: "Base64EncodedImageString")
                     ]
                 )
             ),
@@ -140,18 +134,37 @@ class ServicesController extends AbstractController
             )
         ]
     )]
-    public function show(string $id): Response
+    public function show(string $id): JsonResponse
     {
-        $id = (int) $id;
+        try {
+            $id = (int) $id;
+            
+            // Afficher l'ID pour vérification
+            echo "ID du service : $id<br>";
 
-        $services = $this->repository->findOneBy(['id' => $id]);
+            $service = $this->repository->findOneBy(['id' => $id]);
+    
+            if (!$service) {
+                return new JsonResponse(['error' => 'Service non trouvé'], Response::HTTP_NOT_FOUND);
+            }
+            
+            // Afficher le service pour déboguer
+            echo "Service trouvé :<br>";
+            var_dump($service);
 
-        if ($services) {
-            $responseData = $this->serializer->serialize($services, 'json');
-            return new JsonResponse($responseData, Response::HTTP_OK, [], true);
+            $response = $this->serializer->serialize($service, 'json');
+
+            // Afficher la réponse sérialisée
+            echo "Réponse sérialisée :<br>";
+            var_dump($response);
+    
+            return new JsonResponse([
+                'message' => 'Service trouvé avec succès',
+                'data' => $response,
+            ], Response::HTTP_OK);
+        } catch (\Exception $e) {
+            return new JsonResponse(['error' => 'Une erreur est survenue : ' . $e->getMessage()], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
-
-        return new JsonResponse(null, Response::HTTP_NOT_FOUND);
     }
 
     #[Route('/{id}', name: 'edit', methods: 'PUT')]

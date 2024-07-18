@@ -20,8 +20,8 @@ class Services
     #[ORM\Column(type: Types::TEXT)]
     private ?string $description = null;
 
-    #[ORM\Column(length: 255, nullable: true)]
-    private ?string $imageBase64 = null;
+    #[ORM\Column(type: Types::BLOB, nullable: true)]
+    private ?string $image = null;
 
     public function getId(): ?int
     {
@@ -52,14 +52,14 @@ class Services
         return $this;
     }
 
-    public function getImageBase64(): ?string
+    public function getImage(): ?string
     {
-        return $this->imageBase64;
+        return $this->image;
     }
 
-    public function setImageBase64(?string $imageBase64): self
+    public function setImage(?string $image): self
     {
-        $this->imageBase64 = $imageBase64;
+        $this->image = $image;
 
         return $this;
     }

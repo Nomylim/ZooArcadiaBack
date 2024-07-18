@@ -5,6 +5,7 @@ namespace App\Entity;
 use App\Repository\HabitatsRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
+use Doctrine\DBAL\Types\Types;
 use Symfony\Component\Serializer\Annotation\Groups;
 use Doctrine\ORM\Mapping as ORM;
 
@@ -34,6 +35,9 @@ class Habitats
     #[Groups(['habitats_read'])]
 
     private Collection $animaux;
+
+    #[ORM\Column(type: Types::BLOB, nullable: true)]
+    private $image = null;
 
     public function __construct()
     {
@@ -95,6 +99,18 @@ class Habitats
                 $animaux->setHabitat(null);
             }
         }
+
+        return $this;
+    }
+
+    public function getImage()
+    {
+        return $this->image;
+    }
+
+    public function setImage($image): static
+    {
+        $this->image = $image;
 
         return $this;
     }

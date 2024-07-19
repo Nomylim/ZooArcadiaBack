@@ -4,6 +4,7 @@ namespace App\Entity;
 
 use App\Repository\ServicesRepository;
 use Doctrine\DBAL\Types\Types;
+use Symfony\Component\Serializer\Annotation\Groups;
 use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity(repositoryClass: ServicesRepository::class)]
@@ -12,16 +13,19 @@ class Services
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
+    #[Groups(['services_read'])]
+
     private ?int $id = null;
 
     #[ORM\Column(length: 255)]
+    #[Groups(['services_read'])]
+
     private ?string $nom = null;
 
     #[ORM\Column(type: Types::TEXT)]
-    private ?string $description = null;
+    #[Groups(['services_read'])]
 
-    #[ORM\Column(type: Types::BLOB, nullable: true)]
-    private ?string $image = null;
+    private ?string $description = null;
 
     public function getId(): ?int
     {
@@ -48,18 +52,6 @@ class Services
     public function setDescription(string $description): static
     {
         $this->description = $description;
-
-        return $this;
-    }
-
-    public function getImage(): ?string
-    {
-        return $this->image;
-    }
-
-    public function setImage(?string $image): self
-    {
-        $this->image = $image;
 
         return $this;
     }

@@ -4,6 +4,7 @@ namespace App\Controller;
 
 use App\Entity\Nourriture;
 use App\Repository\AnimauxRepository;
+use OpenApi\Annotations\Property;
 use OpenApi\Attributes as OA;
 use App\Repository\NourritureRepository;
 use Doctrine\ORM\EntityManagerInterface;
@@ -44,7 +45,9 @@ class NourritureController extends AbstractController
                     new OA\Property(property: "grammage", type: "integer", example: 500),
                     new OA\Property(property: "date", type: "string", format: "date", example: "2023-07-10"),
                     new OA\Property(property: "heure", type: "string", format: "time", example: "14:30"),
-                    new OA\Property(property: "animal_id", type: "integer", example: 23),
+                    new OA\Property(property: "animal", type: "object", properties:[
+                        new OA\Property(property: "id", type:"integer", example: 23)
+                    ]),
                 ]
             )
         ),
@@ -55,12 +58,14 @@ class NourritureController extends AbstractController
                 content: new OA\JsonContent(
                     type: "object",
                     properties: [
-                        new OA\Property(property: "id", type: "integer", example: "1"),
+                        new OA\Property(property: "id", type: "integer", example: 1),
                         new OA\Property(property: "nom", type: "string", example: "Du foin"),
-                        new OA\Property(property: "grammage", type: "integer", example: "500"),
+                        new OA\Property(property: "grammage", type: "integer", example: 500),
                         new OA\Property(property: "date", type: "string", format: "date", example: "2023-07-10"),
                         new OA\Property(property: "heure", type: "string", format: "time", example: "14:30"),
-                        new OA\Property(property: "animal_id", type: "integer", example: "23"),
+                        new OA\Property(property: "animal", type: "object", properties:[
+                            new OA\Property(property: "id", type:"integer", example: 23)
+                        ]),
                     ]
                 )
             )
@@ -75,11 +80,11 @@ class NourritureController extends AbstractController
         try {
             $data = json_decode($request->getContent(), true);
 
-            if (!$data || !isset($data['nom'], $data['grammage'], $data['date'], $data['heure'], $data['animal_id'])) {
+            if (!$data || !isset($data['nom'], $data['grammage'], $data['date'], $data['heure'], $data['animal'])) {
                 $statusCode = Response::HTTP_BAD_REQUEST;
                 $responseData = json_encode(['message' => 'Données invalides']);
             } else {
-                $animal = $this->animauxRepository->find($data['animal_id']);
+                $animal = $this->animauxRepository->find($data['animal']);
                 if (!$animal) {
                     $statusCode = Response::HTTP_NOT_FOUND;
                     $responseData = json_encode(['message' => 'Animal non trouvé']);
@@ -101,10 +106,10 @@ class NourritureController extends AbstractController
                         $this->manager->persist($nourriture);
                         $this->manager->flush();
 
-                        $responseData = $this->serializer->serialize($animal, 'json', ['groups' => 'nourriture_read']);
+                        $responseData = $this->serializer->serialize($nourriture, 'json', ['groups' => 'nourriture_read']);
                         $headers["Location"] = $this->urlGenerator->generate(
                             'app_api_nourriture_show',
-                            ['id' => $animal->getId()],
+                            ['id' => $nourriture->getId()],
                             UrlGeneratorInterface::ABSOLUTE_URL
                         );
                     }
@@ -142,7 +147,9 @@ class NourritureController extends AbstractController
                         new OA\Property(property: "grammage", type: "integer", example: 500),
                         new OA\Property(property: "date", type: "string", format: "date", example: "2023-07-10"),
                         new OA\Property(property: "heure", type: "string", format: "time", example: "14:30"),
-                        new OA\Property(property: "animal_id", type: "integer", example: "23"),
+                        new OA\Property(property: "animal", type: "object", properties:[
+                            new OA\Property(property: "id", type:"integer", example: 23)
+                        ]),
                     ]
                 )
             ),
@@ -184,10 +191,12 @@ class NourritureController extends AbstractController
                 type: "object",
                 properties: [
                     new OA\Property(property: "nom", type: "string", example: "Du foin"),
-                    new OA\Property(property: "grammage", type: "integer", example: "500"),
+                    new OA\Property(property: "grammage", type: "integer", example: 500),
                     new OA\Property(property: "date", type: "string", format: "date", example: "2023-07-10"),
                     new OA\Property(property: "heure", type: "string", format: "time", example: "14:00"),
-                    new OA\Property(property: "animal_id", type: "integer", example: "23"),
+                    new OA\Property(property: "animal", type: "object", properties:[
+                        new OA\Property(property: "id", type:"integer", example: 23)
+                    ]),
                 ]
             )
         ),
@@ -207,7 +216,7 @@ class NourritureController extends AbstractController
         $data = json_decode($request->getContent(), true);
 
         $nourriture = $this->nourritureRepository->findOneBy(['id' => $id]);
-        $animal = $this->animauxRepository->find($data['animal_id']);
+        $animal = $this->animauxRepository->find($data['animal']);
         $date = DateTime::createFromFormat('Y-m-d', $data['date']);
         $heure = DateTime::createFromFormat('H:i', $data['heure']);
 
@@ -277,5 +286,44 @@ class NourritureController extends AbstractController
         }
 
         return new JsonResponse(null, Response::HTTP_NOT_FOUND);
+    }
+
+    #[Route('_all', name: 'list_all', methods: 'GET')]
+    #[OA\Get(
+        path: "/api/nourriture_all",
+        summary: "Liste tous les consommations de nourriture",
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: "La liste de tous les consommations de nourriture",
+                content: new OA\JsonContent(
+                    type: "array",
+                    items: new OA\Items(
+                        type: "object",
+                        properties: [
+                            new OA\Property(property: "nom", type: "string", example: "Du foin"),
+                            new OA\Property(property: "grammage", type: "integer", example: 500),
+                            new OA\Property(property: "date", type: "string", format: "date", example: "2023-07-10"),
+                            new OA\Property(property: "heure", type: "string", format: "time", example: "14:00"),
+                            new OA\Property(property: "animal", type: "object", properties:[
+                                new OA\Property(property: "id", type:"integer", example: 23)
+                            ]),
+                        ]
+                    )
+                )
+            )
+        ]
+    )]
+    public function listAll(NourritureRepository $repository, SerializerInterface $serializer): Response
+    {
+        try{
+            $nourriture = $repository->findAll();
+            $serializedRapport = $serializer->serialize($nourriture, 'json',['groups' => 'nourriture_read']);
+            return new JsonResponse($serializedRapport, Response::HTTP_OK, [], true);
+        }
+        catch(\Exception $e){
+            $this->logger->error('Erreur lors de la récupération des nourriture: ' . $e->getMessage(), ['exception' => $e]);
+            return new JsonResponse(['message' => 'Erreur interne du serveur'], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
     }
 }

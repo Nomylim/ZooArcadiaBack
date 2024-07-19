@@ -5,6 +5,7 @@ namespace App\Entity;
 use App\Repository\NourritureRepository;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Serializer\Attribute\Groups;
 
 #[ORM\Entity(repositoryClass: NourritureRepository::class)]
 class Nourriture
@@ -12,22 +13,28 @@ class Nourriture
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
+    #[Groups(['nourriture_read'])]
     private ?int $id = null;
 
     #[ORM\Column(length: 255)]
+    #[Groups(['nourriture_read'])]
     private ?string $nom = null;
 
     #[ORM\Column]
+    #[Groups(['nourriture_read'])]
     private ?int $grammage = null;
 
     #[ORM\Column(type: Types::DATE_MUTABLE)]
+    #[Groups(['nourriture_read'])]
     private ?\DateTimeInterface $date = null;
 
     #[ORM\Column(type: Types::TIME_MUTABLE)]
+    #[Groups(['nourriture_read'])]
     private ?\DateTimeInterface $heure = null;
 
     #[ORM\ManyToOne(inversedBy: 'nourriture')]
     #[ORM\JoinColumn(nullable: false)]
+    #[Groups(['nourriture_read'])]
     private ?Animaux $animal = null;
 
     public function getId(): ?int

@@ -3,3 +3,7 @@ controllers:
         path: ../src/Controller/
         namespace: App\Controller
     type: attribute
+
+test_redis:
+    path: /test-redis
+    controller: App\Controller\TestRedisController::index

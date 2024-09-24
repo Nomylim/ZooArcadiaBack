@@ -17,3 +17,8 @@ animal_selection_count:
     path: /animal/selection-count/{animalId}
     controller: App\Controller\AnimalController::getSelectionCount
     methods: GET
+
+animal_selection_counts:
+    path : /animal/vues
+    controller : App\Controller\AnimalController::getAllVues
+    methods: GET

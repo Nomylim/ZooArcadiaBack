@@ -36,7 +36,7 @@ class RapportVeterinaires
     #[Groups(['rapportveterinaire_read'])]
     private ?string $description = null;
 
-    #[ORM\ManyToOne(inversedBy: 'Etat')]
+    #[ORM\ManyToOne(targetEntity:Animaux::class, inversedBy: 'rapports')]
     #[ORM\JoinColumn(nullable: false)]
     private ?Animaux $animal = null;
 

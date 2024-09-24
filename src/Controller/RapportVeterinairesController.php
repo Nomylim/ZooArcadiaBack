@@ -64,6 +64,7 @@ class RapportVeterinairesController extends AbstractController
                         new OA\Property(property: "etatanimal", type: "string", example: "en bonne santé"),
                         new OA\Property(property: "description", type: "string", example: "descriptif de l'animal plus poussé"),
                         new OA\Property(property: "animal", type: "integer", example: 23),
+                        new OA\Property(property: "animal_prenom", type: "string", example: "Fido"),
                     ]
                 )
             )
@@ -107,7 +108,12 @@ class RapportVeterinairesController extends AbstractController
                         $this->manager->persist($rapportveterinaire);
                         $this->manager->flush();
 
-                        $responseData = $this->serializer->serialize($animal, 'json', ['groups' => 'rapportveterinaire_read']);
+                        $responseData = $this->serializer->serialize($rapportveterinaire, 'json', ['groups' => 'rapportveterinaire_read']);
+                        $animalPrenom = $animal->getPrenom();// Récupérer le prénom de l'animal
+                        $responseDataArray = json_decode($responseData, true); // Convertir en tableau
+                        $responseDataArray['animal_prenom'] = $animalPrenom; // Ajouter le prénom
+                        $responseData = json_encode($responseDataArray); // Convertir de nouveau en JSON
+
                         $headers["Location"] = $this->urlGenerator->generate(
                             'app_api_rapportveterinaires_show',
                             ['id' => $animal->getId()],
@@ -151,6 +157,7 @@ class RapportVeterinairesController extends AbstractController
                         new OA\Property(property: "etatanimal", type: "string", example: "en bonne santé"),
                         new OA\Property(property: "description", type: "string", example: "descriptif de l'animal plus poussé"),
                         new OA\Property(property: "animal_id", type: "integer", example: 23),
+                        new OA\Property(property: "animal_prenom", type: "string", example: "Fido"),
                     ]
                 )
             ),
@@ -165,8 +172,22 @@ class RapportVeterinairesController extends AbstractController
         $rapportveterinaire = $this->rapportVeterinairesRepository->findOneBy(['id' => $id]);
 
         if ($rapportveterinaire) {
-            $responseData = $this->serializer->serialize($rapportveterinaire, 'json', ['groups' => 'rapportveterinaire_read']);
-            return new JsonResponse($responseData, Response::HTTP_OK, [], true);
+            // Obtenir l'animal associé
+            $animal = $rapportveterinaire->getAnimal();
+
+            // Créer une réponse personnalisée
+            $responseData = [
+                'id' => $rapportveterinaire->getId(),
+                'nourriture' => $rapportveterinaire->getNourriture(),
+                'grammage' => $rapportveterinaire->getGrammage(),
+                'date' => $rapportveterinaire->getDate()->format('Y-m-d'),
+                'etatanimal' => $rapportveterinaire->getEtatAnimal(),
+                'description' => $rapportveterinaire->getDescription(),
+                'animal_id' => $animal ? $animal->getId() : null,
+                'animal_prenom' => $animal ? $animal->getPrenom() : null,
+            ];
+
+            return new JsonResponse($responseData, Response::HTTP_OK);
         }
 
         return new JsonResponse(null, Response::HTTP_NOT_FOUND);
@@ -245,6 +266,9 @@ class RapportVeterinairesController extends AbstractController
         $rapportveterinaire->setDescription($data['description']);
         $rapportveterinaire->setAnimal($animal);
 
+        //Ajoute le rapport à l'animal
+        $animal->getRapport()->add($rapportveterinaire);
+
         $this->manager->flush();
 
         return new JsonResponse(null, Response::HTTP_NO_CONTENT);
@@ -314,12 +338,26 @@ class RapportVeterinairesController extends AbstractController
     )]
     public function listAll(RapportVeterinairesRepository $repository, SerializerInterface $serializer): Response
     {
-        try{
-            $rapportveterinaires = $repository->findAll();
-            $serializedRapport = $serializer->serialize($rapportveterinaires, 'json',['groups' => 'rapportveterinaire_read']);
-            return new JsonResponse($serializedRapport, Response::HTTP_OK, [], true);
-        }
-        catch(\Exception $e){
+        try {
+            $rapports = $this->rapportVeterinairesRepository->findAll();
+
+            $responseData = [];
+            foreach ($rapports as $rapport) {
+                $animal = $rapport->getAnimal(); // Assurez-vous d'avoir la méthode getAnimal()
+
+                $responseData[] = [
+                    'id' => $rapport->getId(),
+                    'animal_prenom' => $animal ? $animal->getPrenom() : null, // Inclure le prénom de l'animal
+                    'nourriture' => $rapport->getNourriture(),
+                    'grammage' => $rapport->getGrammage(),
+                    'date' => $rapport->getDate()->format('Y-m-d'),
+                    'etatanimal' => $rapport->getEtatAnimal(),
+                    'description' => $rapport->getDescription(),
+                ];
+            }
+
+            return new JsonResponse($responseData, Response::HTTP_OK);
+        } catch (\Exception $e) {
             $this->logger->error('Erreur lors de la récupération des rapports vétérinaires: ' . $e->getMessage(), ['exception' => $e]);
             return new JsonResponse(['message' => 'Erreur interne du serveur'], Response::HTTP_INTERNAL_SERVER_ERROR);
         }

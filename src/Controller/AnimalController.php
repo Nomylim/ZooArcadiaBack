@@ -46,7 +46,7 @@ class AnimalController extends AbstractController
             'animalId' => $animalId,
             'count' => $count,
             'prenom' => $animal->getPrenom(),
-            'etat' => $animal->getEtat() // Assurez-vous que la méthode getEtat() existe dans votre entité Animal
+            'etat' => $animal->getEtat() 
         ]);
     }
 
@@ -89,7 +89,7 @@ class AnimalController extends AbstractController
                 'animalId' => $animalId,
                 'count' => $count,
                 'prenom' => $animal->getPrenom(),
-                'etat' => $animal->getEtat() // Assurez-vous que la méthode getEtat() existe dans votre entité Animal
+                'etat' => $animal->getEtat() 
             ];
         }
 

@@ -32,10 +32,19 @@ class Nourriture
     #[Groups(['nourriture_read'])]
     private ?\DateTimeInterface $heure = null;
 
-    #[ORM\ManyToOne(inversedBy: 'nourriture')]
+    #[ORM\ManyToOne(targetEntity: Animaux::class, inversedBy: 'nourriture')]
     #[ORM\JoinColumn(nullable: false)]
-    #[Groups(['nourriture_read'])]
     private ?Animaux $animal = null;
+    #[Groups(['nourriture_read'])]
+    public function getAnimalId(): ?int
+    {
+        return $this->animal ? $this->animal->getId() : null;
+    }
+
+    public function getAnimalPrenom(): ?string
+    {
+        return $this->animal ? $this->animal->getPrenom() : null;
+    }
 
     public function getId(): ?int
     {

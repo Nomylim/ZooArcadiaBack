@@ -36,8 +36,8 @@ class Animaux
     /**
      * @var Collection<int, RapportVeterinaires>
      */
-    #[ORM\OneToMany(targetEntity: RapportVeterinaires::class, mappedBy: 'Animal', orphanRemoval: true)]
-    private Collection $etat;
+    #[ORM\OneToMany(targetEntity: RapportVeterinaires::class, mappedBy: 'animal', orphanRemoval: true)]
+    private Collection $rapports;
 
     /**
      * @var Collection<int, Nourriture>
@@ -47,7 +47,7 @@ class Animaux
 
     public function __construct()
     {
-        $this->etat = new ArrayCollection();
+        $this->rapports = new ArrayCollection();
         $this->nourriture = new ArrayCollection();
     }
 
@@ -95,11 +95,18 @@ class Animaux
     /**
      * @return Collection<int, RapportVeterinaires>
      */
-    public function getEtat(): Collection
+    public function getRapport(): Collection
     {
-        return $this->etat;
+        return $this->rapports;
     }
-
+     public function getEtat(): ?string
+    {
+        if($this->rapports->isEmpty()){
+            return null;
+        }
+        return $this->rapports->last()->getEtatAnimal();
+    }
+    /*
     public function addEtat(RapportVeterinaires $etat): static
     {
         if (!$this->etat->contains($etat)) {
@@ -120,7 +127,7 @@ class Animaux
         }
 
         return $this;
-    }
+    }*/
 
     /**
      * @return Collection<int, Nourriture>

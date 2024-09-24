@@ -63,7 +63,7 @@ class RapportVeterinairesController extends AbstractController
                         new OA\Property(property: "date", type: "string", format: "date", example: "2023-07-10"),
                         new OA\Property(property: "etatanimal", type: "string", example: "en bonne santé"),
                         new OA\Property(property: "description", type: "string", example: "descriptif de l'animal plus poussé"),
-                        new OA\Property(property: "animal_id", type: "integer", example: 23),
+                        new OA\Property(property: "animal", type: "integer", example: 23),
                     ]
                 )
             )
@@ -78,11 +78,11 @@ class RapportVeterinairesController extends AbstractController
         try {
             $data = json_decode($request->getContent(), true);
 
-            if (!$data || !isset($data['nourriture'], $data['grammage'], $data['date'], $data['etatanimal'], $data['description'], $data['animal_id'])) {
+            if (!$data || !isset($data['nourriture'], $data['grammage'], $data['date'], $data['etatanimal'], $data['description'], $data['animal'])) {
                 $statusCode = Response::HTTP_BAD_REQUEST;
                 $responseData = json_encode(['message' => 'Données invalides']);
             } else {
-                $animal = $this->animauxRepository->find($data['animal_id']);
+                $animal = $this->animauxRepository->find($data['animal']);
                 if (!$animal) {
                     $statusCode = Response::HTTP_NOT_FOUND;
                     $responseData = json_encode(['message' => 'Animal non trouvé']);
@@ -100,6 +100,9 @@ class RapportVeterinairesController extends AbstractController
                         $rapportveterinaire->setEtatAnimal($data['etatanimal']);
                         $rapportveterinaire->setDescription($data['description']);
                         $rapportveterinaire->setAnimal($animal);
+
+                        //Ajoute le rapport à l'animal
+                        $animal->getRapport()->add($rapportveterinaire);
 
                         $this->manager->persist($rapportveterinaire);
                         $this->manager->flush();

@@ -7,3 +7,13 @@ controllers:
 test_redis:
     path: /test-redis
     controller: App\Controller\TestRedisController::index
+
+animal_select:
+    path: /animal/select/{animalId}
+    controller: App\Controller\AnimalController::selectAnimal
+    methods: POST
+
+animal_selection_count:
+    path: /animal/selection-count/{animalId}
+    controller: App\Controller\AnimalController::getSelectionCount
+    methods: GET

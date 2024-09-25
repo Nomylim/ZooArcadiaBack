@@ -45,7 +45,7 @@ class NourritureController extends AbstractController
                     new OA\Property(property: "grammage", type: "integer", example: 500),
                     new OA\Property(property: "date", type: "string", format: "date", example: "2023-07-10"),
                     new OA\Property(property: "heure", type: "string", format: "time", example: "14:30"),
-                    new OA\Property(property: "animal", type: "object", properties:[
+                    new OA\Property(property: "animal_id", type: "object", properties:[
                         new OA\Property(property: "id", type:"integer", example: 23)
                     ]),
                 ]
@@ -63,9 +63,8 @@ class NourritureController extends AbstractController
                         new OA\Property(property: "grammage", type: "integer", example: 500),
                         new OA\Property(property: "date", type: "string", format: "date", example: "2023-07-10"),
                         new OA\Property(property: "heure", type: "string", format: "time", example: "14:30"),
-                        new OA\Property(property: "animal", type: "object", properties:[
-                            new OA\Property(property: "id", type:"integer", example: 23)
-                        ]),
+                        new OA\Property(property: "animal_id", type: "integer", example: 23),
+                        new OA\Property(property: "animal_prenom", type: "string", example: "Fido"),
                     ]
                 )
             )
@@ -107,6 +106,11 @@ class NourritureController extends AbstractController
                         $this->manager->flush();
 
                         $responseData = $this->serializer->serialize($nourriture, 'json', ['groups' => 'nourriture_read']);
+                        $animalPrenom = $animal->getPrenom();// Récupérer le prénom de l'animal
+                        $responseDataArray = json_decode($responseData, true); // Convertir en tableau
+                        $responseDataArray['animal_prenom'] = $animalPrenom; // Ajouter le prénom
+                        $responseData = json_encode($responseDataArray); // Convertir de nouveau en JSON
+
                         $headers["Location"] = $this->urlGenerator->generate(
                             'app_api_nourriture_show',
                             ['id' => $nourriture->getId()],
@@ -147,9 +151,8 @@ class NourritureController extends AbstractController
                         new OA\Property(property: "grammage", type: "integer", example: 500),
                         new OA\Property(property: "date", type: "string", format: "date", example: "2023-07-10"),
                         new OA\Property(property: "heure", type: "string", format: "time", example: "14:30"),
-                        new OA\Property(property: "animal", type: "object", properties:[
-                            new OA\Property(property: "id", type:"integer", example: 23)
-                        ]),
+                        new OA\Property(property: "animal_id", type: "object", example: 23),
+                        new OA\Property(property: "animal_prenom", type: "string", example: "Fido"),
                     ]
                 )
             ),
@@ -164,8 +167,19 @@ class NourritureController extends AbstractController
         $nourriture = $this->nourritureRepository->findOneBy(['id' => $id]);
 
         if ($nourriture) {
-            $responseData = $this->serializer->serialize($nourriture, 'json', ['groups' => 'nourriture_read']);
-            return new JsonResponse($responseData, Response::HTTP_OK, [], true);
+            $animal = $nourriture->getAnimal();
+
+            $responseData = [
+                "Id" => $nourriture->getId(),
+                "nom" => $nourriture ->getNom(),
+                'grammage' => $nourriture->getGrammage(),
+                'date' => $nourriture->getDate()->format('Y-m-d'),
+                'heure' => $nourriture->getHeure()->format('H:i'),
+                'animal_id' => $animal ? $animal->getId() : null,
+                'animal_prenom' => $animal ? $animal->getPrenom() : null,
+            ];
+            return new JsonResponse($responseData, Response::HTTP_OK);
+
         }
 
         return new JsonResponse(null, Response::HTTP_NOT_FOUND);
@@ -194,9 +208,7 @@ class NourritureController extends AbstractController
                     new OA\Property(property: "grammage", type: "integer", example: 500),
                     new OA\Property(property: "date", type: "string", format: "date", example: "2023-07-10"),
                     new OA\Property(property: "heure", type: "string", format: "time", example: "14:00"),
-                    new OA\Property(property: "animal", type: "object", properties:[
-                        new OA\Property(property: "id", type:"integer", example: 23)
-                    ]),
+                    new OA\Property(property: "animal", type: "object", example : 23),
                 ]
             )
         ),
@@ -305,9 +317,8 @@ class NourritureController extends AbstractController
                             new OA\Property(property: "grammage", type: "integer", example: 500),
                             new OA\Property(property: "date", type: "string", format: "date", example: "2023-07-10"),
                             new OA\Property(property: "heure", type: "string", format: "time", example: "14:00"),
-                            new OA\Property(property: "animal", type: "object", properties:[
-                                new OA\Property(property: "id", type:"integer", example: 23)
-                            ]),
+                            new OA\Property(property: "animal", type: "object", example: 23),
+                            new OA\Property(property: "animal_prenom", type: "string", example: "Fido"),
                         ]
                     )
                 )
@@ -317,9 +328,28 @@ class NourritureController extends AbstractController
     public function listAll(NourritureRepository $repository, SerializerInterface $serializer): Response
     {
         try{
-            $nourriture = $repository->findAll();
-            $serializedRapport = $serializer->serialize($nourriture, 'json',['groups' => 'nourriture_read']);
-            return new JsonResponse($serializedRapport, Response::HTTP_OK, [], true);
+            $nourritures = $this->nourritureRepository->findAll();
+        $responseData = []; // Assurez-vous d'initialiser un tableau vide
+
+        foreach ($nourritures as $nourriture) {
+            $animal = $nourriture->getAnimal();
+
+            // Créez un tableau pour chaque consommation de nourriture
+            $nourritureData = [
+                "Id" => $nourriture->getId(),
+                'animal_prenom' => $animal ? $animal->getPrenom() : null,
+                "nom" => $nourriture->getNom(),
+                'grammage' => $nourriture->getGrammage(),
+                'date' => $nourriture->getDate()->format('Y-m-d'),
+                'heure' => $nourriture->getHeure()->format('H:i'),
+            ];
+
+            // Ajoutez les données de cette consommation à la liste
+            $responseData[] = $nourritureData;
+        }
+
+        // Retournez l'ensemble des données dans la réponse JSON
+        return new JsonResponse($responseData, Response::HTTP_OK);
         }
         catch(\Exception $e){
             $this->logger->error('Erreur lors de la récupération des nourriture: ' . $e->getMessage(), ['exception' => $e]);

@@ -46,6 +46,12 @@ class RapportVeterinaires
         return $this->animal ? $this->animal->getId() : null;
     }
 
+    public function getAnimalPrenom(): ?string
+    {
+        return $this->animal ? $this->animal->getPrenom() : null;
+    }
+
+
     public function getId(): ?int
     {
         return $this->id;

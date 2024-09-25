@@ -1,4 +1,6 @@
 {
+    "name": "nomylim/zooarcadiaback",
+    "description": "Zoo Arcadia Back-end",
     "type": "project",
     "license": "proprietary",
     "minimum-stability": "stable",

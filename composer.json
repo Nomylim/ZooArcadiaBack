@@ -71,7 +71,8 @@
             "assets:install %PUBLIC_DIR%": "symfony-cmd"
         },
         "post-install-cmd": [
-            "@auto-scripts"
+            "@auto-scripts",
+            "COMPOSER_MEMORY_LIMIT=-1 composer install --optimize-autoloader"
         ],
         "post-update-cmd": [
             "@auto-scripts"

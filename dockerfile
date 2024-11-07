@@ -1,21 +1,26 @@
-# Utiliser une image PHP officielle
-FROM php:8.1-cli
+FROM php:8.0-apache
+WORKDIR /var/www/html
 
-# Installer les dépendances nécessaires (curl, git, unzip, etc.)
+# Install dependencies
 RUN apt-get update && apt-get install -y \
-    curl \
-    git \
+    libpng-dev \
+    libjpeg-dev \
+    libfreetype6-dev \
+    zip \
     unzip \
-    && curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
+    git \
+    && docker-php-ext-configure gd --with-freetype --with-jpeg \
+    && docker-php-ext-install gd
 
-# Définir le répertoire de travail
-WORKDIR /app
+# Install Composer
+COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-# Copier tous les fichiers du projet dans le conteneur
+# Copy the application code
 COPY . .
 
-# Installer les dépendances via Composer
-RUN composer install --ignore-platform-reqs
+# Install PHP dependencies
+RUN composer install --ignore-platform-reqs --no-interaction --no-scripts
 
-# Commande pour démarrer l'application (exemple avec PHP built-in server)
-CMD ["php", "-S", "0.0.0.0:8080", "-t", "public"]
+EXPOSE 80
+CMD ["apache2-foreground"]
+
